@@ -91,7 +91,10 @@ indico_management = Bundle(
                'Sessions.js',
                'CFA.js',
                'RoomBookingMapOfRooms.js',
-               'EventUsers.js'),
+               'EventUsers.js',
+               'Markdown.Converter.js',
+               'Markdown.Editor.js',
+               'Markdown.Sanitizer.js'),
     filters='rjsmin', output='js/indico_management_%(version)s.min.js')
 
 indico_room_booking = Bundle(
@@ -304,10 +307,12 @@ def register_all_css(env, main_css_file):
                     'jquery.qtip-custom.css',
                     'jquery.colorpicker.css',
                     'jquery.multiselect.filter.css',
-                    'jquery.multiselect.css'),
+                    'jquery.multiselect.css',
+                    'pagedown_editor.css'),
         filters=("cssmin", "cssrewrite"),
         output='css/base_%(version)s.min.css')
 
     env.register('indico_badges_css', indico_badges_css)
     env.register('base_css', base_css)
+    env.register('base_sass', base_sass)
     env.register('base_sass', base_sass)

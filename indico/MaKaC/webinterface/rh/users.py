@@ -566,7 +566,3 @@ class RHCreateExternalUsers(RH):
         else:
             targetURL = self._addURL + "?" + urlencode(self._params) + "&" + "&".join(newIdentityList)
         self._redirect( targetURL )
-
-
-
-

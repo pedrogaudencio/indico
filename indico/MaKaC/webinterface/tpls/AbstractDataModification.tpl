@@ -56,7 +56,12 @@
                                             </td>
                                             <td width="100%">
                                                 % if field.getType() == "textarea":
-                                                    <textarea id="f_${ field.getId() }" name="f_${ field.getId() }" width="100%" rows="${ nbRows }" style="width:100%">${ fieldsDict["f_"+ field.getId()] }</textarea>
+                                                    <div class="wmd-panel">
+                                                    <div id="wmd-button-bar-f_${ field.getId() }"></div>
+                                                        <textarea class="wmd-input" id="wmd-input-f_${ field.getId() }" name="f_${ field.getId() }" width="100%" rows="${ nbRows }" style="width:100%">${ fieldsDict["f_"+ field.getId()] }</textarea>
+                                                    </div>
+
+                                                    <div id="wmd-preview-f_${ field.getId() }" class="wmd-panel wmd-preview"></div>
                                                 % elif field.getType() == "input":
                                                     <input id="f_${ field.getId() }" name="f_${ field.getId() }" value="${ fieldsDict["f_"+ field.getId()] }" style="width:100%">
                                                 % endif
@@ -430,8 +435,8 @@ function checkLimitedFields() {
 }
 
 // On load
-createLimitedFieldsMgr();
-addPMToMandatoryFields();
+//createLimitedFieldsMgr();
+//addPMToMandatoryFields();
 
 // Drag and drop for the authors
 $('#sortspace').tablesorter({
@@ -458,5 +463,26 @@ $('#sortspace').tablesorter({
     handle: '.authorTable', // relative to sortable element - the handle to start sorting
     placeholderHTML: '<li></li>' // the html to put inside the placeholder element
 });
+
+// Pagedown editor stuff
+
+(function () {
+% for field in additionalFields:
+    % if field.getType() == "textarea":
+    var converter = Markdown.getSanitizingConverter();
+
+    converter.hooks.chain("preBlockGamut", function (text, rbg) {
+        return text.replace(/^ {0,3}""" *\n((?:.*?\n)+?) {0,3}""" *$/gm, function (whole, inner) {
+            return "<blockquote>" + rbg(inner) + "</blockquote>\n";
+        });
+    });
+
+    var editor = new Markdown.Editor(converter, "-f_${ field.getId() }");
+
+    editor.run();
+    % endif
+% endfor
+
+})();
 
 </script>
