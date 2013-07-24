@@ -78,7 +78,11 @@ indico_core = Bundle(
                'Services.js',
                'Util.js',
                'Login.js',
-               'Dragndrop.js'),
+               'Dragndrop.js',
+               # this it here because I don't know which js is used on AbstractDisplay.tpl:
+               '../Management/Markdown.Converter.js',
+               '../Management/Markdown.Editor.js',
+               '../Management/Markdown.Sanitizer.js'),
     filters='rjsmin', output='js/indico_core_%(version)s.min.js')
 
 indico_management = Bundle(
@@ -95,7 +99,11 @@ indico_management = Bundle(
                'Sessions.js',
                'CFA.js',
                'RoomBookingMapOfRooms.js',
-               'EventUsers.js'),
+               'EventUsers.js',
+               #'Markdown.Converter.js',
+               #'Markdown.Editor.js',
+               #'Markdown.Sanitizer.js'
+               ),
     filters='rjsmin', output='js/indico_management_%(version)s.min.js')
 
 indico_room_booking = Bundle(
@@ -314,7 +322,8 @@ def register_all_css(env, main_css_file):
                     'jquery.qtip-custom.css',
                     'jquery.colorpicker.css',
                     'jquery.multiselect.filter.css',
-                    'jquery.multiselect.css'),
+                    'jquery.multiselect.css',
+                    'pagedown_editor.css'),
         filters=("cssmin", "cssrewrite"),
         output='css/base_%(version)s.min.css')
 
