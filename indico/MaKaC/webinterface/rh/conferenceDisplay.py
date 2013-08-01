@@ -195,7 +195,7 @@ class RHConfUserCreation( conferenceBase.RHConferenceBase ):
             if self._params.get("password","") != self._params.get("passwordBis",""):
                 self._params["msg"] += _("You must enter the same password twice.")+"<br>"
                 save = False
-            if not authManager.isLoginFree(self._params.get("login","")):
+            if not authManager.isLoginAvailable(self._params.get("login", "")):
                 self._params["msg"] += _("Sorry, the login you requested is already in use. Please choose another one.")+"<br>"
                 save = False
             if not self._validMail(self._params.get("email","")):
@@ -315,9 +315,8 @@ class RHConfSendLogin( conferenceBase.RHConferenceBase ):
             except IndexError:
                 pass
         if av:
-            sm = mail.sendLoginInfo(av, self._conf)
-            sm.send()
-        self._redirect(urlHandlers.UHConfSignIn.getURL( self._conf ))
+            mail.send_login_info(av, self._conf)
+        self._redirect(urlHandlers.UHConfSignIn.getURL(self._conf))
 
 
 class RHConfResetPassword(RHResetPasswordBase, RHConferenceBase):

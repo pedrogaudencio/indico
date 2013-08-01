@@ -27,6 +27,7 @@ import MaKaC.webinterface.urlHandlers as urlHandlers
 import MaKaC.webinterface.navigation as navigation
 import MaKaC.review as review
 from MaKaC.webinterface.pages.conferences import WPConferenceModifBase, WPConferenceDefaultDisplayBase, WPConferenceModifAbstractBase
+from MaKaC.webinterface.pages.conferences import WConfDisplayBodyBase
 from MaKaC.common import Config
 from MaKaC.webinterface.common.abstractStatusWrapper import AbstractStatusList
 from MaKaC.i18n import _
@@ -37,45 +38,91 @@ from MaKaC.common import Configuration
 from MaKaC.common.fossilize import fossilize
 from MaKaC.fossils.conference import ILocalFileAbstractMaterialFossil
 from MaKaC.review import AbstractStatusSubmitted
+from MaKaC.common.TemplateExec import render
 
 
-class WConfCFADeactivated(wcomponents.WTemplated):
+class WConfCFADeactivated(WConfDisplayBodyBase):
+
+    _linkname = "CFA"
 
     def __init__(self, aw, conf):
         self._conf = conf
         self._aw = aw
 
+    def getVars(self):
+        wvars = wcomponents.WTemplated.getVars(self)
+        wvars["body_title"] = self._getTitle()
+        return wvars
 
-class WPCFAInactive( WPConferenceDefaultDisplayBase ):
 
-    def _getBody( self, params ):
-        wc = WConfCFADeactivated( self._getAW(), self._conf )
+class WPCFAInactive(WPConferenceDefaultDisplayBase):
+
+    def _getBody(self, params):
+        wc = WConfCFADeactivated(self._getAW(), self._conf)
         return wc.getHTML()
 
 
-class WCFANotYetOpened(wcomponents.WTemplated):
-    pass
+class WCFANotYetOpened(WConfDisplayBodyBase):
+
+    _linkname = "SubmitAbstract"
+
+    def __init__(self, aw, conf):
+        self._conf = conf
+        self._aw = aw
+
+    def getVars(self):
+        cfaMgr = self._conf.getAbstractMgr()
+        wvars = wcomponents.WTemplated.getVars(self)
+        wvars["body_title"] = self._getTitle()
+        wvars["start_date"] = format_date(cfaMgr.getStartSubmissionDate(), "long")
+        return wvars
 
 
-class WPCFANotYetOpened( WPConferenceDefaultDisplayBase ):
+class WPCFANotYetOpened(WPConferenceDefaultDisplayBase):
 
-    def _getBody( self, params ):
-        wc = WCFANotYetOpened()
+    def _getBody(self, params):
+        wc = WCFANotYetOpened(self._getAW(), self._conf)
         return wc.getHTML()
 
-
-class WCFAClosed(wcomponents.WTemplated):
-    pass
-
-
-class WPCFAClosed( WPConferenceDefaultDisplayBase ):
-
-    def _getBody( self, params ):
-        wc = WCFAClosed()
-        return wc.getHTML()
+    def _defineSectionMenu(self):
+        WPConferenceDefaultDisplayBase._defineSectionMenu(self)
+        self._sectionMenu.setCurrentItem(self._cfaNewSubmissionOpt)
 
 
-class WConfCFA(wcomponents.WTemplated):
+class WCFAClosed(WConfDisplayBodyBase):
+
+    _linkname = "SubmitAbstract"
+
+    def __init__(self, aw, conf):
+        self._conf = conf
+        self._aw = aw
+
+    def getVars(self):
+        cfaMgr = self._conf.getAbstractMgr()
+        wvars = wcomponents.WTemplated.getVars(self)
+        wvars["body_title"] = self._getTitle()
+        wvars["end_date"] = format_date(cfaMgr.getEndSubmissionDate(), "long")
+        return wvars
+
+
+class WPCFAClosed(WPConferenceDefaultDisplayBase):
+
+    def __init__(self, rh, conf, is_modif):
+        WPConferenceDefaultDisplayBase.__init__(self, rh, conf)
+        self._is_modif = is_modif
+
+    def _getBody(self, params):
+        wc = WCFAClosed(self._getAW(), self._conf)
+        return wc.getHTML({'is_modif': self._is_modif})
+
+    def _defineSectionMenu(self):
+        WPConferenceDefaultDisplayBase._defineSectionMenu(self)
+        self._sectionMenu.setCurrentItem(self._cfaNewSubmissionOpt)
+
+
+class WConfCFA(WConfDisplayBodyBase):
+
+    _linkname = "CFA"
 
     def __init__(self, aw, conf):
         self._conf = conf
@@ -100,19 +147,19 @@ class WConfCFA(wcomponents.WTemplated):
                    """) % (submitOpt, urlHandlers.UHUserAbstracts.getURL(self._conf))
         return html
 
-
-    def getVars( self ):
-        vars = wcomponents.WTemplated.getVars( self )
+    def getVars(self):
+        wvars = wcomponents.WTemplated.getVars(self)
         cfa = self._conf.getAbstractMgr()
         if cfa.inSubmissionPeriod():
-            vars["status"] = _("OPENED")
+            wvars["status"] = _("OPENED")
         else:
-            vars["status"] = _("CLOSED")
-        vars["startDate"] = cfa.getStartSubmissionDate().strftime("%d %B %Y")
-        vars["endDate"] = cfa.getEndSubmissionDate().strftime("%d %B %Y")
-        vars["actions"] = self._getActionsHTML()
-        vars["announcement"] = cfa.getAnnouncement()
-        return vars
+            wvars["status"] = _("CLOSED")
+        wvars["startDate"] = cfa.getStartSubmissionDate().strftime("%d %B %Y")
+        wvars["endDate"] = cfa.getEndSubmissionDate().strftime("%d %B %Y")
+        wvars["actions"] = self._getActionsHTML()
+        wvars["announcement"] = cfa.getAnnouncement()
+        wvars["body_title"] = self._getTitle()
+        return wvars
 
 
 class WPConferenceCFA( WPConferenceDefaultDisplayBase ):
@@ -130,9 +177,19 @@ class WPConferenceCFA( WPConferenceDefaultDisplayBase ):
 class WPAbstractSubmission( WPConferenceDefaultDisplayBase ):
     navigationEntry = navigation.NEAbstractSubmission
 
+    def getCSSFiles(self):
+        return WPConferenceDefaultDisplayBase.getCSSFiles(self) + \
+            self._asset_env['pagedown_sass'].urls()
+
     def getJSFiles(self):
         return WPConferenceDefaultDisplayBase.getJSFiles(self) + \
-           self._includeJSPackage('Management')
+            self._includeJSPackage('Management') + \
+            self._asset_env['pagedown_js'].urls()
+
+    def _getHeadContent(self):
+        return WPConferenceDefaultDisplayBase._getHeadContent(self) + render('js/mathjax.config.js.tpl') + \
+            '\n'.join(['<script src="{0}" type="text/javascript"></script>'.format(url)
+                       for url in self._asset_env['mathjax_js'].urls()])
 
     def _getBody( self, params ):
         params["postURL"] = urlHandlers.UHAbstractSubmission.getURL( self._conf )
@@ -145,26 +202,27 @@ class WPAbstractSubmission( WPConferenceDefaultDisplayBase ):
         self._sectionMenu.setCurrentItem(self._cfaNewSubmissionOpt)
 
 
+class WUserAbstracts(WConfDisplayBodyBase):
 
-class WUserAbstracts( wcomponents.WTemplated ):
+    _linkname = "ViewAbstracts"
 
-    def __init__( self, aw, conf ):
+    def __init__(self, aw, conf):
         self._aw = aw
         self._conf = conf
 
     def _getAbstractStatus(self, abstract):
         status = abstract.getCurrentStatus()
-        if isinstance( status, review.AbstractStatusAccepted ):
+        if isinstance(status, review.AbstractStatusAccepted):
             statusLabel = _("Accepted")
-            if status.getType() is not None and status.getType()!="":
-                return "%s as %s"%(statusLabel, status.getType().getName())
-        elif isinstance( status, review.AbstractStatusRejected ):
+            if status.getType() is not None and status.getType() != "":
+                return "%s as %s" % (statusLabel, status.getType().getName())
+        elif isinstance(status, review.AbstractStatusRejected):
             return _("Rejected")
-        elif isinstance( status, review.AbstractStatusWithdrawn ):
+        elif isinstance(status, review.AbstractStatusWithdrawn):
             return _("Withdrawn")
-        elif isinstance(status,review.AbstractStatusDuplicated):
+        elif isinstance(status, review.AbstractStatusDuplicated):
             return _("Duplicated")
-        elif isinstance(status,review.AbstractStatusMerged):
+        elif isinstance(status, review.AbstractStatusMerged):
             return _("Merged")
         elif isinstance(status, (review.AbstractStatusProposedToAccept, review.AbstractStatusProposedToReject)):
             return _("Under Review")
@@ -172,19 +230,20 @@ class WUserAbstracts( wcomponents.WTemplated ):
             return _("In Conflict")
         return _("Submitted")
 
-    def getVars( self ):
-        vars = wcomponents.WTemplated.getVars( self )
+    def getVars(self):
+        wvars = wcomponents.WTemplated.getVars(self)
         cfaMgr = self._conf.getAbstractMgr()
 
-        abstracts = cfaMgr.getAbstractListForAvatar( self._aw.getUser() )
+        abstracts = cfaMgr.getAbstractListForAvatar(self._aw.getUser())
         abstracts += cfaMgr.getAbstractListForAuthorEmail(self._aw.getUser().getEmail())
 
-        vars["abstracts"] = sorted(set(abstracts), key=lambda i:int(i.getId()))
-        vars["formatDate"] = lambda date: format_date(date, "d MMM yyyy")
-        vars["formatTime"] = lambda time: format_time(time, format="short", timezone=timezone(DisplayTZ(self._aw, self._conf).getDisplayTZ()))
-        vars["getAbstractStatus"] = lambda abstract: self._getAbstractStatus(abstract)
-        vars["conf"] = self._conf
-        return vars
+        wvars["body_title"] = self._getTitle()
+        wvars["abstracts"] = sorted(set(abstracts), key=lambda i: int(i.getId()))
+        wvars["formatDate"] = lambda date: format_date(date, "d MMM yyyy")
+        wvars["formatTime"] = lambda time: format_time(time, format="short", timezone=timezone(DisplayTZ(self._aw, self._conf).getDisplayTZ()))
+        wvars["getAbstractStatus"] = lambda abstract: self._getAbstractStatus(abstract)
+        wvars["conf"] = self._conf
+        return wvars
 
 
 class WPUserAbstracts( WPConferenceDefaultDisplayBase ):
@@ -385,7 +444,8 @@ class WPAbstractModify( WPAbstractDisplayBase ):
 
     def getJSFiles(self):
         return WPAbstractDisplayBase.getJSFiles(self) + \
-               self._includeJSPackage('Management')
+            self._includeJSPackage('Management') + \
+            self._asset_env['mathjax'].urls()
 
     def _getBody( self, params ):
         params["postURL"] = urlHandlers.UHAbstractModify.getURL( self._abstract )

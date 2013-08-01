@@ -19,6 +19,9 @@
    along with Indico; if not, see <http://www.gnu.org/licenses/>.
 */
 
+$title-font: Roboto, "Helvetica Neue", Helvetica, Verdana, Arial, Sans;
+$serif-font: Georgia, Times, Serif;
+
 ._rounded-corners {
     @include border-radius(0.2em, 0.2em);
 }

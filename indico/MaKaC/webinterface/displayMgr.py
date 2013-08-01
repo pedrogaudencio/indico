@@ -29,8 +29,9 @@ from MaKaC.errors import MaKaCError
 from MaKaC.conference import LocalFile
 from MaKaC.plugins.base import Observable
 import re
-from MaKaC.i18n import _
 from indico.util.contextManager import ContextManager
+from indico.util.i18n import _, N_
+
 
 class ConfDisplayMgrRegistery:
     """
@@ -793,7 +794,7 @@ class SystemLink(Link):
             # left them
             return True
 
-    def getURL(self):
+    def _getURLObject(self):
         # TOREMOVE: fix events with "absolute" URL
         if not hasattr(self, '_URLHandler'):
             self.getMenu().updateSystemLink()
@@ -802,7 +803,10 @@ class SystemLink(Link):
             handler = getattr(urlHandlers, self._URLHandler)
         else:
             handler = self._URLHandler
-        return str(handler.getURL(conf))
+        return handler.getURL(conf)
+
+    def getURL(self):
+        return str(self._getURLObject())
 
     def getURLHandler(self):
         if not hasattr(self, '_URLHandler'):
@@ -823,6 +827,9 @@ class SystemLink(Link):
             # value get an update
             self._changed = True
 
+    def isVisible(self):
+        return self._getURLObject().valid and super(SystemLink, self).isVisible()
+
 
 class SystemLinkData(Observable):
 
@@ -831,131 +838,132 @@ class SystemLinkData(Observable):
         #and all entries in the menu whiche are not is this dict are removed.
         if not hasattr(self, "_linkData"):
             self._linkData = {
-            "overview": {\
-                "caption": "Overview", \
-                "URL": 'UHConferenceOverview', \
-                "parent": ""}, \
-            "programme": { \
-                "caption": "Scientific Programme", \
-                "URL": 'UHConferenceProgram', \
-                "parent": ""}, \
-            "CFA": { \
-                "caption": "Call for Abstracts", \
-                "URL": 'UHConferenceCFA', \
-                "parent": ""}, \
-            "ViewAbstracts": { \
-                "caption": "View my abstracts", \
-                "URL": 'UHUserAbstracts', \
-                "parent": "CFA"}, \
-            "SubmitAbstract": { \
-                "caption": "Submit a new abstract", \
-                "URL": 'UHAbstractSubmission', \
-                "parent": "CFA"}, \
-            "manageTrack": { \
-                "caption": "Manage my tracks", \
-                "URL": 'UHConfMyStuffMyTracks', \
-                "parent": "programme"}, \
-            "timetable": { \
-                "caption": "Timetable", \
-                "URL": 'UHConferenceTimeTable', \
-                "parent": ""}, \
-            "contributionList": { \
-                "caption": "Contribution List", \
-                "URL": 'UHContributionList', \
-                "parent": ""}, \
-            "authorIndex": { \
-                "caption": "Author index", \
-                "URL": 'UHConfAuthorIndex', \
-                "parent": ""} ,\
-            "speakerIndex": { \
-                "caption": "Speaker index", \
-                "URL": 'UHConfSpeakerIndex', \
-                "parent": "", \
-                "visibilityByDefault": False}, \
-            "mystuff": { \
-                "caption": "My conference", \
-                "URL": 'UHConfMyStuff', \
-                "parent": ""}, \
-            "mytracks": { \
-                "caption": "My tracks", \
-                "URL": 'UHConfMyStuffMyTracks', \
-                "parent": "mystuff"}, \
-            "mysessions": { \
-                "caption": "My sessions", \
-                "URL": 'UHConfMyStuffMySessions', \
-                "parent": "mystuff"}, \
-            "mycontribs": { \
-                "caption": "My contributions", \
-                "URL": 'UHConfMyStuffMyContributions', \
-                "parent": "mystuff"}, \
-            "paperreviewing": { \
-                "caption": "Paper Reviewing", \
-                "URL": 'UHPaperReviewingDisplay', \
-                "parent": ""}, \
-            "managepaperreviewing": { \
-                "caption": "Manage Paper Reviewing", \
-                "URL": 'UHConfModifReviewingPaperSetup', \
-                "parent": "paperreviewing"}, \
-            "assigncontributions": { \
-                "caption": "Assign papers", \
-                "URL": 'UHConfModifReviewingAssignContributionsList', \
-                "parent": "paperreviewing"}, \
-            "judgelist": { \
-                "caption": "Referee Area", \
-                "URL": 'UHConfModifListContribToJudge', \
-                "parent": "paperreviewing"}, \
-            "judgelistreviewer": { \
-                "caption": "Content Reviewer Area", \
-                "URL": 'UHConfModifListContribToJudgeAsReviewer', \
-                "parent": "paperreviewing"}, \
-            "judgelisteditor": { \
-                "caption": "Layout Reviewer Area", \
-                "URL": 'UHConfModifListContribToJudgeAsEditor', \
-                "parent": "paperreviewing"}, \
-            "uploadpaper": { \
-                "caption": "Upload paper", \
-                "URL": 'UHUploadPaper', \
-                "parent": "paperreviewing"}, \
-            "downloadtemplate": { \
-                "caption": "Download template", \
-                "URL": 'UHDownloadPRTemplate', \
-                "parent": "paperreviewing"}, \
-            "abstractsBook": { \
-                "caption": "Book of abstracts", \
-                "URL": 'UHConfAbstractBook', \
-                "parent": "", \
-                "displayTarget": "_blank"}, \
-            "registrationForm": { \
-                "caption": "Registration", \
-                "URL": 'UHConfRegistrationForm', \
-                "parent": ""}, \
-            "ViewMyRegistration": { \
-                "caption": "Modify my registration", \
-                "URL": 'UHConfRegistrationFormModify', \
-                "parent": "registrationForm"}, \
-            "NewRegistration": { \
-                "caption": "Registration Form", \
-                "URL": 'UHConfRegistrationFormDisplay', \
-                "parent": "registrationForm"}, \
-            "registrants": { \
-                "caption": "List of registrants", \
-                "URL": 'UHConfRegistrantsList', \
-                "parent": "", \
-                "visibilityByDefault": False}, \
-            "evaluation": { \
-                "caption": "Evaluation", \
-                "URL": 'UHConfEvaluationMainInformation', \
-                "parent": ""}, \
-            "newEvaluation": { \
-                "caption": "Evaluation Form", \
-                "URL": 'UHConfEvaluationDisplay', \
-                "parent": "evaluation"}, \
-            "viewMyEvaluation": { \
-                "caption": "Modify my evaluation", \
-                "URL": 'UHConfEvaluationDisplayModif', \
-                "parent": "evaluation"}
+                "overview": {
+                    "caption": N_("Overview"),
+                    "URL": 'UHConferenceOverview',
+                    "parent": ""},
+                "programme": {
+                    "caption": N_("Scientific Programme"),
+                    "URL": 'UHConferenceProgram',
+                    "parent": ""},
+                "CFA": {
+                    "caption": N_("Call for Abstracts"),
+                    "URL": 'UHConferenceCFA',
+                    "parent": ""},
+                "ViewAbstracts": {
+                    "caption": N_("View my Abstracts"),
+                    "URL": 'UHUserAbstracts',
+                    "parent": "CFA"},
+                "SubmitAbstract": {
+                    "caption": N_("Submit Abstract"),
+                    "URL": 'UHAbstractSubmission',
+                    "parent": "CFA"},
+                "manageTrack": {
+                    "caption": N_("Manage my Tracks"),
+                    "URL": 'UHConfMyStuffMyTracks',
+                    "parent": "programme"},
+                "timetable": {
+                    "caption": N_("Timetable"),
+                    "URL": 'UHConferenceTimeTable',
+                    "parent": ""},
+                "contributionList": {
+                    "caption": N_("Contribution List"),
+                    "URL": 'UHContributionList',
+                    "parent": ""},
+                "authorIndex": {
+                    "caption": N_("Author List"),
+                    "URL": 'UHConfAuthorIndex',
+                    "parent": ""},
+                "speakerIndex": {
+                    "caption": N_("Speaker List"),
+                    "URL": 'UHConfSpeakerIndex',
+                    "parent": "",
+                    "visibilityByDefault": False},
+                "mystuff": {
+                    "caption": N_("My Conference"),
+                    "URL": 'UHConfMyStuff',
+                    "parent": ""},
+                "mytracks": {
+                    "caption": N_("My Tracks"),
+                    "URL": 'UHConfMyStuffMyTracks',
+                    "parent": "mystuff"},
+                "mysessions": {
+                    "caption": N_("My Sessions"),
+                    "URL": 'UHConfMyStuffMySessions',
+                    "parent": "mystuff"},
+                "mycontribs": {
+                    "caption": N_("My Contributions"),
+                    "URL": 'UHConfMyStuffMyContributions',
+                    "parent": "mystuff"},
+                "paperreviewing": {
+                    "caption": N_("Paper Reviewing"),
+                    "URL": 'UHPaperReviewingDisplay',
+                    "parent": ""},
+                "managepaperreviewing": {
+                    "caption": N_("Manage Paper Reviewing"),
+                    "URL": 'UHConfModifReviewingPaperSetup',
+                    "parent": "paperreviewing"},
+                "assigncontributions": {
+                    "caption": N_("Assign Papers"),
+                    "URL": 'UHConfModifReviewingAssignContributionsList',
+                    "parent": "paperreviewing"},
+                "judgelist": {
+                    "caption": N_("Referee Area"),
+                    "URL": 'UHConfModifListContribToJudge',
+                    "parent": "paperreviewing"},
+                "judgelistreviewer": {
+                    "caption": N_("Content Reviewer Area"),
+                    "URL": 'UHConfModifListContribToJudgeAsReviewer',
+                    "parent": "paperreviewing"},
+                "judgelisteditor": {
+                    "caption": N_("Layout Reviewer Area"),
+                    "URL": 'UHConfModifListContribToJudgeAsEditor',
+                    "parent": "paperreviewing"},
+                "uploadpaper": {
+                    "caption": N_("Upload Paper"),
+                    "URL": 'UHUploadPaper',
+                    "parent": "paperreviewing"},
+                "downloadtemplate": {
+                    "caption": N_("Download Template"),
+                    "URL": 'UHDownloadPRTemplate',
+                    "parent": "paperreviewing"},
+                "abstractsBook": {
+                    "caption": N_("Book of Abstracts"),
+                    "URL": 'UHConfAbstractBook',
+                    "parent": "",
+                    "displayTarget": "_blank"},
+                "registrationForm": {
+                    "caption": N_("Registration"),
+                    "URL": 'UHConfRegistrationForm',
+                    "parent": ""},
+                "ViewMyRegistration": {
+                    "caption": N_("Modify my Registration"),
+                    "URL": 'UHConfRegistrationFormModify',
+                    "parent": "registrationForm"},
+                "NewRegistration": {
+                    "caption": N_("Registration Form"),
+                    "URL": 'UHConfRegistrationFormDisplay',
+                    "parent": "registrationForm"},
+                "registrants": {
+                    "caption": N_("Participant List"),
+                    "URL": 'UHConfRegistrantsList',
+                    "parent": "",
+                    "visibilityByDefault": False},
+                "evaluation": {
+                    "caption": N_("Evaluation"),
+                    "URL": 'UHConfEvaluationMainInformation',
+                    "parent": ""},
+                "newEvaluation": {
+                    "caption": N_("Evaluation Form"),
+                    "URL": 'UHConfEvaluationDisplay',
+                    "parent": "evaluation"},
+                "viewMyEvaluation": {
+                    "caption": N_("Modify my Evaluation"),
+                    "URL": 'UHConfEvaluationDisplayModif',
+                    "parent": "evaluation"}
             }
             self._notify('confDisplaySMFillDict', {'dict': self._linkData, 'conf': conf})
+
         #this ordered list allow us to keep the order we want for the menu
         if not hasattr(self, "_linkDataOrderedKeys"):
             self._linkDataOrderedKeys = ["overview",
@@ -989,7 +997,6 @@ class SystemLinkData(Observable):
                                         "newEvaluation",
                                         "viewMyEvaluation"]
             self._notify('confDisplaySMFillOrderedKeys', self._linkDataOrderedKeys)
-
 
     def getLinkData(self):
         return self._linkData

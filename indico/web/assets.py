@@ -278,6 +278,18 @@ moment = Bundle(
         'lang/fr.js'),
     filters='rjsmin', output='js/moment_%(version)s.min.js')
 
+mathjax_js = Bundle(
+    'js/lib/mathjax/MathJax.js',
+    'js/custom/pagedown_mathjax.js',
+    filters='rjsmin', output='js/mathjax_%(version)s.min.js')
+
+pagedown_js = Bundle(
+    *namespace('js/lib/pagedown',
+               'Markdown.Converter.js',
+               'Markdown.Editor.js',
+               'Markdown.Sanitizer.js'),
+    filters='rjsmin', output='js/pagedown_%(version)s.min.js')
+
 base_js = Bundle(jquery, utils, presentation, calendar, indico_jquery, moment, indico_core,
                  indico_legacy, indico_common)
 
@@ -306,27 +318,33 @@ def register_all_js(env):
     env.register('indico_badges_js', indico_badges_js)
     env.register('base_js', base_js)
     env.register('ie_compatibility', ie_compatibility)
+    env.register('pagedown_js', pagedown_js)
+    env.register('mathjax_js', mathjax_js)
 
 
 def register_all_css(env, main_css_file):
 
+    pagedown_sass = Bundle('sass/modules/pagedown.scss',
+                           filters=("pyscss", "cssrewrite", "cssmin"),
+                           output="sass/pagedown_editor_%(version)s.min.css")
+
     base_css = Bundle(
         *namespace('css',
                    main_css_file,
-                    'category_display.css',
-                    'calendar-blue.css',
-                    'jquery-ui.css',
-                    'lib/jquery.qtip.css',
-                    'jquery.colorbox.css',
-                    'jquery-ui-custom.css',
-                    'jquery.qtip-custom.css',
-                    'jquery.colorpicker.css',
-                    'jquery.multiselect.filter.css',
-                    'jquery.multiselect.css',
-                    'pagedown_editor.css'),
+                   'category_display.css',
+                   'calendar-blue.css',
+                   'jquery-ui.css',
+                   'lib/jquery.qtip.css',
+                   'jquery.colorbox.css',
+                   'jquery-ui-custom.css',
+                   'jquery.qtip-custom.css',
+                   'jquery.colorpicker.css',
+                   'jquery.multiselect.filter.css',
+                   'jquery.multiselect.css'),
         filters=("cssmin", "cssrewrite"),
         output='css/base_%(version)s.min.css')
 
     env.register('indico_badges_css', indico_badges_css)
+    env.register('pagedown_sass', pagedown_sass)
     env.register('base_css', base_css)
     env.register('base_sass', base_sass)

@@ -1,9 +1,17 @@
-<div class="groupTitle">
-	${_('Submit Abstract - Submissions Closed')}
-</div>
-<p>
-	${_('The deadline for abstract submission and modification has now passed, therefore you are no longer able to submit any new abstracts for this event.')}
-</p>
-<p>
-	${_('If you have further queries, please contact the event organizer.')}
-</p>
+<%inherit file="ConfDisplayBodyBase.tpl"/>
+
+<%block name="title">
+    ${body_title}
+</%block>
+
+<%block name="content">
+    <div class="info-message-box">
+        <div class="message-text">
+            % if is_modif: # easier to translate
+                ${_("Sorry, but the deadline for abstract modification finished on {date}.".format(date=end_date))}
+            % else:
+                ${_("Sorry, but the deadline for abstract submission finished on {date}.".format(date=end_date))}
+            % endif
+        </div>
+    </div>
+</%block>

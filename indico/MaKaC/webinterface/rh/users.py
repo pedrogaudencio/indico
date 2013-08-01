@@ -123,7 +123,7 @@ class RHUserCreation( RH ):
             if self._params.get("password","") != self._params.get("passwordBis",""):
                 self._params["msg"] += _("You must enter the same password twice.")+"<br>"
                 save = False
-            if not authManager.isLoginFree(self._params.get("login","")):
+            if not authManager.isLoginAvailable(self._params.get("login", "")):
                 self._params["msg"] += _("Sorry, the login you requested is already in use. Please choose another one.")+"<br>"
                 save = False
             if not self._validMail(self._params.get("email","")):
@@ -375,18 +375,17 @@ class RHUserIdentityCreation( RHUserIdentityBase ):
         self._ok = params.get("OK", "")
         self._params = params
 
-    def _process( self ):
-
-        if self._params.get("Cancel",None) is not None :
-            p = adminPages.WPUserDetails( self, self._avatar )
-            return p.display()
+    def _process(self):
+        if self._params.get("Cancel") is not None:
+            self._redirect(urlHandlers.UHUserDetails.getURL(self._avatar))
+            return
 
         msg = ""
         if self._ok:
             ok = True
             authManager = AuthenticatorMgr.getInstance()
             #first, check if login is free
-            if not authManager.isLoginFree(self._login):
+            if not authManager.isLoginAvailable(self._login):
                 msg += "Sorry, the login you requested is already in use. Please choose another one.<br>"
                 ok = False
             if not self._pwd:
@@ -424,7 +423,7 @@ class RHUserIdPerformCreation( RHUserIdentityBase ):
     def _process( self ):
         authManager = AuthenticatorMgr.getInstance()
         #first, check if login is free
-        if not authManager.isLoginFree(self._login):
+        if not authManager.isLoginAvailable(self._login):
             self._redirect(self._fromURL + "&msg=Login not avaible")
             return
         #then, check if password is OK
@@ -449,8 +448,8 @@ class RHUserIdentityChangePassword( RHUserIdentityBase ):
         RHUserIdentityBase._checkParams( self, params )
         self._params = params
 
-    def _process( self ):
-        if self._params.get("OK",None) is not None :
+    def _process(self):
+        if self._params.get("OK") is not None:
             if self._params.get("password","") == "" or self._params.get("passwordBis","") == "" :
                 self._params["msg"] = _("Both password and password confirmation fields must be filled up")
                 del self._params["OK"]
@@ -463,15 +462,13 @@ class RHUserIdentityChangePassword( RHUserIdentityBase ):
                 return p.display()
             identity = self._avatar.getIdentityById(self._params["login"], "Local")
             identity.setPassword(self._params["password"])
-            p = adminPages.WPUserDetails( self, self._avatar )
+            self._redirect(urlHandlers.UHUserDetails.getURL(self._avatar))
+        elif self._params.get("Cancel") is not None:
+            self._redirect(urlHandlers.UHUserDetails.getURL(self._avatar))
+        else:
+            self._params["msg"] = ""
+            p = adminPages.WPIdentityChangePassword(self, self._avatar, self._params)
             return p.display()
-        elif self._params.get("Cancel",None) is not None :
-            p = adminPages.WPUserDetails( self, self._avatar )
-            return p.display()
-
-        self._params["msg"] = ""
-        p = adminPages.WPIdentityChangePassword( self, self._avatar, self._params )
-        return p.display()
 
 
 class RHUserRemoveIdentity( RHUserIdentityBase ):

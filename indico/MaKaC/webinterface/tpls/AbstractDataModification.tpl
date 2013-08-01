@@ -1,4 +1,7 @@
 <% from MaKaC.common import Config %>
+
+
+
 % if origin == "display":
 <form action=${ postURL } enctype="multipart/form-data" method="POST" width="100%" onsubmit="return onsubmitDisplayActions();">
     <table width="100%" align="center">
@@ -7,6 +10,7 @@
     <table width="85%" align="left" style="padding: 5px 0 0 15px;">
 % endif
 
+<<<<<<< HEAD
 <script type="text/javascript"
   src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
@@ -46,6 +50,8 @@
 
 </script>
 
+=======
+>>>>>>> 12ca3da7eaa0a138baef199b34adb416a3d14b8a
         <input type="hidden" name="origin" value=${ origin }>
         <tr>
             <td>
@@ -94,7 +100,7 @@
                                                     <% nbRows = 30 %>
                                                 % endif
                                             </td>
-                                            <td width="100%">
+                                            <td width="100%" data-field-id="${ field.getId() }">
                                                 % if field.getType() == "textarea":
                                                     <div class="wmd-panel">
                                                     <div id="wmd-button-bar-f_${ field.getId() }"></div>
@@ -516,27 +522,23 @@ $('#sortspace').tablesorter({
 
 // Pagedown editor stuff
 
-(function () {
-% for field in additionalFields:
-    % if field.getType() == "textarea":
-    var converter = Markdown.getSanitizingConverter();
 
-    converter.hooks.chain("preBlockGamut", function (text, rbg) {
-        return text.replace(/^ {0,3}""" *\n((?:.*?\n)+?) {0,3}""" *$/gm, function (whole, inner) {
-            return "<blockquote>" + rbg(inner) + "</blockquote>\n";
-        });
+function block_handler(text, rbg) {
+    return text.replace(/^ {0,3}""" *\n((?:.*?\n)+?) {0,3}""" *$/gm, function (whole, inner) {
+        return "<blockquote>" + rbg(inner) + "</blockquote>\n";
     });
+}
 
-    var editor = new Markdown.Editor(converter, "-f_${ field.getId() }");
+$(function() {
+    $('textarea.wmd-input').each(function(i, elem) {
+        var fieldId = $(elem).closest('td').data('fieldId');
 
-    var postfix = "";
-    StackExchange.mathjaxEditing.prepareWmdForMathJax(editor, postfix, [["$$", "$$"], ["\\\\(","\\\\)"]]);
+        converter = Markdown.getSanitizingConverter();
+        converter.hooks.chain("preBlockGamut", block_handler);
 
-    editor.run();
-
-    % endif
-% endfor
-
-})();
-
+        var editor = new Markdown.Editor(converter, "-f_" + fieldId);
+        PageDownMathJax.mathjaxEditing().prepareWmdForMathJax(editor, "-f_" + fieldId, [["$$", "$$"], ["\\\\(","\\\\)"]]);
+        editor.run();
+    });
+});
 </script>

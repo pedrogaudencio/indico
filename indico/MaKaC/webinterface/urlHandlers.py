@@ -200,10 +200,6 @@ class UHSignInSSO(SecureURLHandler):
     _endpoint = "user.signIn-sso"
 
 
-class UHSignInSSOExecute(SecureURLHandler):
-    _endpoint = 'user.signIn-sso-execute'
-
-
 class UHActiveAccount(URLHandler):
     _endpoint = 'user.signIn-active'
 
@@ -218,10 +214,6 @@ class UHDisabledAccount(URLHandler):
 
 class UHSendLogin(URLHandler):
     _endpoint = 'user.signIn-sendLogin'
-
-
-class UHResetPassword(SecureURLHandler):
-    _endpoint = 'user.signIn-resetPassword'
 
 
 class UHUnactivatedAccount(URLHandler):
@@ -1416,10 +1408,6 @@ class UHConfSendLogin(UHConfUser):
     _endpoint = 'event.confLogin-sendLogin'
 
 
-class UHConfResetPassword(SecureURLHandler):
-    _endpoint = 'event.confLogin-resetPassword'
-
-
 class UHConfSendActivation(UHConfUser):
     _endpoint = 'event.confLogin-sendActivation'
 
@@ -1603,10 +1591,6 @@ class UHAdminArea(URLHandler):
     _endpoint = 'admin.adminList'
 
 
-class UHAdminSwitchCacheActive(URLHandler):
-    _endpoint = 'admin.adminList-switchCacheActive'
-
-
 class UHAdminSwitchDebugActive(URLHandler):
     _endpoint = 'admin.adminList-switchDebugActive'
 
@@ -1692,14 +1676,6 @@ class UHCategoryActionSubCategs(URLHandler):
 
 class UHCategoryActionConferences(URLHandler):
     _endpoint = 'category_mgmt.categoryModification-actionConferences'
-
-
-class UHCategoryClearCache(URLHandler):
-    _endpoint = 'category_mgmt.categoryModification-clearCache'
-
-
-class UHCategoryClearConferenceCaches(URLHandler):
-    _endpoint = 'category_mgmt.categoryModification-clearConferenceCaches'
 
 
 class UHCategModifAC(URLHandler):

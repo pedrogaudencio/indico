@@ -24,15 +24,15 @@ import os
 import re
 import time
 
-from flask import request, redirect, url_for, Blueprint
+from flask import request, redirect, Blueprint
 from flask import current_app as app
+from flask import url_for as _url_for
 from flask import send_file as _send_file
 from werkzeug.datastructures import Headers, FileStorage
 from werkzeug.exceptions import NotFound, HTTPException
-from werkzeug.routing import BaseConverter, RequestRedirect
+from werkzeug.routing import BaseConverter, UnicodeConverter, RequestRedirect
 from werkzeug.urls import url_parse
 
-from MaKaC.common import Config
 from indico.util.caching import memoize
 from indico.web.rh import RHHtdocs
 
@@ -47,6 +47,9 @@ def _convert_request_value(x):
 
 
 def create_flat_args():
+    """Creates a dict containing the GET/POST arguments in a style old indico code expects.
+
+    Do not use this for anything new - use request.* directly instead!"""
     args = request.args.copy()
     for key, values in request.form.iterlists():
         args.setlist(key, values)
@@ -97,8 +100,9 @@ def make_view_func(obj):
 
 @memoize
 def redirect_view(endpoint, code=302):
+    """Creates a view function that redirects to the given endpoint."""
     def _redirect(**kwargs):
-        return redirect(url_for(endpoint, **kwargs), code=code)
+        return redirect(_url_for(endpoint, **kwargs), code=code)
 
     return _redirect
 
@@ -125,7 +129,7 @@ def make_compat_redirect_func(blueprint, endpoint, view_func=None):
         # Ugly hack to get non-list arguments unless they are used multiple times.
         # This is necessary since passing a list for an URL path argument breaks things.
         args = dict((k, v[0] if len(v) == 1 else v) for k, v in request.args.iterlists())
-        target = url_for('%s.%s' % (blueprint.name, endpoint), **args)
+        target = _url_for('%s.%s' % (blueprint.name, endpoint), **args)
         return redirect(target, 302 if app.debug else 301)
     return _redirect
 
@@ -166,13 +170,104 @@ def endpoint_for_url(url):
         return None
 
 
+def url_for(endpoint, target=None, **values):
+    """Wrapper for Flask's url_for() function.
+
+    Instead of an endpoint you can also pass an URLHandler - in this case **only** its _endpoint will be used.
+    However, there is usually no need to do so. This is just so you can use it in places where sometimes a UH
+    might be passed instead.
+
+    The `target` argument allows you to pass some object having a `getLocator` method returning a dict. This
+    should be used e.g. when generating an URL for an event since `getLocator()` provides the `{'confId': 123}`
+    dict instead of you having to pass `confId=event.getId()` as a kwarg.
+
+    For details on Flask's url_for, please see its documentation.
+    Anyway, the important arguments you can put in `values` besides actual arguments are:
+    _external: if set to `True`, an absolute URL is generated
+    _secure: if True/False, set _scheme to https/http if possible (only with _external)
+    _scheme: a string specifying the desired URL scheme (only with _external) - use _secure if possible!
+    _anchor: if provided this is added as #anchor to the URL.
+    """
+
+    if hasattr(endpoint, '_endpoint'):
+        endpoint = endpoint._endpoint
+
+    secure = values.pop('_secure', None)
+    if secure is not None:
+        from MaKaC.common import Config
+        if secure and Config.getInstance().getBaseSecureURL():
+            values['_scheme'] = 'https'
+        elif not secure:
+            values['_scheme'] = 'http'
+
+    if target is not None:
+        locator = target.getLocator()
+        intersection = set(locator.iterkeys()) & set(values.iterkeys())
+        if intersection:
+            raise ValueError('url_for kwargs collide with locator: %s' % ', '.join(intersection))
+        values.update(locator)
+
+    return _url_for(endpoint, **values)
+
+
+def url_rule_to_js(endpoint):
+    """Converts the rule(s) of an endpoint to a JavaScript object.
+
+    Use this if you need to build an URL in JavaScript.
+    JS Usage:
+
+    var url_template = ${ url_rule_to_js('blueprint.endpoint') | j,n };
+    var url = build_url(url_template[, params[, fragment]]);
+
+    `params` is is an object containing the arguments and `fragment` a string containing the #anchor
+    """
+
+    if hasattr(endpoint, '_endpoint'):
+        endpoint = endpoint._endpoint
+
+    # based on werkzeug.contrib.jsrouting
+    # we skip UnicodeConverter in the converters list since that one is the default and never needs custom js code
+    return {
+        'type': 'flask_rules',
+        'endpoint': endpoint,
+        'rules': [
+            {
+                'args': list(rule.arguments),
+                'defaults': rule.defaults,
+                'trace': [
+                    {
+                        'is_dynamic': is_dynamic,
+                        'data': data
+                    } for is_dynamic, data in rule._trace
+                ],
+                'converters': dict((key, type(converter).__name__)
+                                   for key, converter in rule._converters.iteritems()
+                                   if type(converter) is not UnicodeConverter)
+            } for rule in app.url_map.iter_rules(endpoint)
+        ]
+    }
+
+
 def send_file(name, path_or_fd, mimetype, last_modified=None, no_cache=True, inline=True, conditional=False):
-    # Note: path can also be a StringIO!
+    """Sends a file to the user.
+
+    `name` is required and should be the filename visible to the user.
+    `path_or_fd` is either the physical path to the file or a file-like object (e.g. a StringIO).
+    `mimetype` SHOULD be a proper MIME type such as image/png. It may also be an indico-style file type such as JPG.
+    `last_modified` may contain a unix timestamp or datetime object indicating the last modification of the file.
+    `no_cache` can be set to False to disable no-cache headers.
+    `inline` SHOULD be set to false only when you want to force the user's browser to download the file. Usually it is
+    much nicer if e.g. a PDF file can be displayed inline so don't disable it unless really necessary.
+    `conditional` is very useful when sending static files such as CSS/JS/images. It will allow the browser to retrieve
+    the file only if it has been modified (based on mtime and size).
+    """
+
     if request.user_agent.platform == 'android':
         # Android is just full of fail when it comes to inline content-disposition...
         inline = False
     if mimetype.isupper() and '/' not in mimetype:
         # Indico file type such as "JPG" or "CSV"
+        from MaKaC.common import Config
         mimetype = Config.getInstance().getFileTypeMimeType(mimetype)
     try:
         rv = _send_file(path_or_fd, mimetype=mimetype, as_attachment=not inline, attachment_filename=name,
@@ -198,6 +293,8 @@ def send_file(name, path_or_fd, mimetype, last_modified=None, no_cache=True, inl
     return rv
 
 
+# Note: When adding custom converters please do not forget to add them to converter_functions in routing.js
+# if they need any custom processing (i.e. not just encodeURIComponent) in JavaScript.
 class ListConverter(BaseConverter):
     """Matches a dash-separated list"""
 
