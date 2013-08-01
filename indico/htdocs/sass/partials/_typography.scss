@@ -19,12 +19,14 @@
    along with Indico; if not, see <http://www.gnu.org/licenses/>.
 */
 
+@import "base/theme";
+
 h1 {
-   font-family: "Roboto", "Helvetica Neue", Helvetica, Verdana, Arial, sans-serif;
+   font-family: $title-font;
 }
 
 h2, h3, h4 {
-    font-family: "Roboto Light", "Helvetica Neue", Helvetica, Verdana, Arial, sans-serif;
+    font-family: $title-font;
 }
 
 h2 {
@@ -49,7 +51,7 @@ h3 {
     padding-left: 10px;
     color: #777;
     border-left: 4px solid #ddd;
-    font-family: Georgia, Times, Serif;
+    font-family: $serif-font;
 }
 
 /* Quick rules */

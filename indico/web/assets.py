@@ -291,6 +291,7 @@ base_sass = Bundle('sass/screen.scss',
                    depends=["sass/base/*.scss",
                             "sass/partials/*.scss"])
 
+
 def register_all_js(env):
     env.register('jquery', jquery)
     env.register('utils', utils)
@@ -315,9 +316,9 @@ def register_all_js(env):
 
 def register_all_css(env, main_css_file):
 
-    pagedown_css = Bundle('css/pagedown_editor.css',
-                          filters=("cssmin", "cssrewrite"),
-                          output="css/pagedown_editor_%(version)s.min.css")
+    pagedown_sass = Bundle('sass/modules/pagedown.scss',
+                           filters=("pyscss", "cssrewrite", "cssmin"),
+                           output="sass/pagedown_editor_%(version)s.min.css")
 
     base_css = Bundle(
         *namespace('css',
@@ -336,6 +337,6 @@ def register_all_css(env, main_css_file):
         output='css/base_%(version)s.min.css')
 
     env.register('indico_badges_css', indico_badges_css)
-    env.register('pagedown_css', pagedown_css)
+    env.register('pagedown_sass', pagedown_sass)
     env.register('base_css', base_css)
     env.register('base_sass', base_sass)
