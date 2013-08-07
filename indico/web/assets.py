@@ -78,11 +78,7 @@ indico_core = Bundle(
                'Services.js',
                'Util.js',
                'Login.js',
-               'Dragndrop.js',
-               # this it here because I don't know which js is used on AbstractDisplay.tpl:
-               '../Management/Markdown.Converter.js',
-               '../Management/Markdown.Editor.js',
-               '../Management/Markdown.Sanitizer.js'),
+               'Dragndrop.js'),
     filters='rjsmin', output='js/indico_core_%(version)s.min.js')
 
 indico_management = Bundle(
@@ -99,11 +95,7 @@ indico_management = Bundle(
                'Sessions.js',
                'CFA.js',
                'RoomBookingMapOfRooms.js',
-               'EventUsers.js',
-               #'Markdown.Converter.js',
-               #'Markdown.Editor.js',
-               #'Markdown.Sanitizer.js'
-               ),
+               'EventUsers.js',),
     filters='rjsmin', output='js/indico_management_%(version)s.min.js')
 
 indico_room_booking = Bundle(

@@ -53,7 +53,8 @@
             % if Contribution.getField(f.getId()):
             <div class="contributionSection">
                 <h2 class="contributionSectionTitle">${f.getName()}</h2>
-                <div class="contributionSectionContent">${escape(Contribution.getField(f.getId()))}
+                <div class="contributionSectionContent" style="white-space: nowrap;">
+                    ${escape(Contribution.getField(f.getId())) | m}
                 </div>
             </div>
             % endif

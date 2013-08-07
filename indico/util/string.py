@@ -24,6 +24,9 @@ String manipulation functions
 import re
 import unicodedata
 
+from HTMLParser import HTMLParser
+import markdown2, sys
+
 
 def unicodeOrNone(string):
     return None if string == None else string.decode('utf-8')
@@ -85,3 +88,10 @@ def remove_tags(text):
     """
     pattern = re.compile(r"<(\w|\/)[^<\s\"']*?>")
     return remove_extra_spaces(pattern.sub(' ', text))
+
+
+def m(text):
+    """ Mako markdown to html filter """
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
+    return markdown2.markdown(HTMLParser().unescape(text))

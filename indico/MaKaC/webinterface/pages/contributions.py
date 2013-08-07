@@ -44,6 +44,9 @@ from indico.util.i18n import i18nformat
 from indico.util.date_time import format_time, format_date, format_datetime
 from indico.util import json
 
+from indico.util.string import m
+from MaKaC.common.TemplateExec import render
+
 
 class WPContributionBase( WPMainBase, WPConferenceBase ):
 
@@ -185,6 +188,16 @@ class WPContributionDisplay( WPContributionDefaultDisplayBase ):
         wc=WContributionDisplay( self._getAW(), self._contrib, self._hideFull )
         return wc.getHTML()
 
+    def _getHeadContent(self):
+        return WPContributionDefaultDisplayBase._getHeadContent(self) + render('js/mathjax.config.js.tpl') + \
+            '\n'.join(['<script src="{0}" type="text/javascript"></script>'.format(url)
+                       for url in self._asset_env['mathjax_js'].urls()])
+
+    def getJSFiles(self):
+        return WPContributionDefaultDisplayBase.getJSFiles(self) + \
+               self._asset_env['mathjax_js'].urls()
+
+
 
 class WPContributionModifBase( WPConferenceModifBase  ):
 
@@ -301,6 +314,20 @@ class WPContributionModifBase( WPConferenceModifBase  ):
 
         body = wcomponents.WTabControl( self._tabCtrl, self._getAW() ).getHTML( self._getTabContent( params ) )
         return banner + body
+
+    def _getHeadContent(self):
+        return WPConferenceModifBase._getHeadContent(self) + render('js/mathjax.config.js.tpl') + \
+            '\n'.join(['<script src="{0}" type="text/javascript"></script>'.format(url)
+                       for url in self._asset_env['mathjax_js'].urls()])
+
+    def getCSSFiles(self):
+        return WPConferenceModifBase.getCSSFiles(self) + \
+            self._asset_env['pagedown_sass'].urls()
+
+    def getJSFiles(self):
+        return WPConferenceModifBase.getJSFiles(self) + \
+            self._asset_env['pagedown_js'].urls() + \
+            self._asset_env['mathjax_js'].urls()
 
 
 class WPContribModifMain(WPContributionModifBase):
@@ -469,8 +496,8 @@ class WContribModifMain(wcomponents.WTemplated):
                     html+="""
                     <tr>
                         <td class="dataCaptionTD"><span class="dataCaptionFormat">%s</span></td>
-                        <td bgcolor="white" class="blacktext"><table class="tablepre"><tr><td><pre>%s</pre></td></tr></table></td>
-                    </tr>"""%(caption, self.htmlText( self._contrib.getField(id) ))
+                        <td bgcolor="white" class="blacktext"><table class="tablepre"><tr><td><pre><div style="white-space: nowrap;">%s</div></pre></td></tr></table></td>
+                    </tr>"""%(caption, m( self.htmlText( self._contrib.getField(id) )))
         return html
 
     def _getParticipantsList(self, participantList):
@@ -779,10 +806,15 @@ class WContributionDataModification(wcomponents.WTemplated):
                         <td nowrap class="titleCellTD">
                             <span class="titleCellFormat">%s</span>
                         </td>
-                        <td bgcolor="white" width="100%%" valign="top" class="blacktext">
-                            <textarea name="%s" cols="65" rows="10">%s</textarea>
+                        <td bgcolor="white" width="100%%" valign="top" class="blacktext" data-field-id="%s">
+                            <div class="wmd-panel">
+                            <div id="wmd-button-bar-%s"></div>
+                                <textarea class="wmd-input" id="wmd-input-%s" name="%s" cols="65" rows="10">%s</textarea>
+                            </div>
+
+                            <div id="wmd-preview-%s" class="wmd-panel wmd-preview"></div>
                         </td>
-                    </tr>"""%(caption, "f_%s"%id, self.htmlText(self._contrib.getField(id)))
+                    </tr>"""%(caption, "f_%s"%id, "f_%s"%id, "f_%s"%id, "f_%s"%id, self.htmlText(self._contrib.getField(id)), "f_%s"%id)
         return html
 
     def getContribId(self):

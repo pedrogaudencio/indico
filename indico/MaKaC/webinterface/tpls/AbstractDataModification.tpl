@@ -10,48 +10,6 @@
     <table width="85%" align="left" style="padding: 5px 0 0 15px;">
 % endif
 
-<<<<<<< HEAD
-<script type="text/javascript"
-  src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-<script type="text/javascript"
-  src="http://pmgaudencio.neei.uevora.pt/mathjax/mathjax-editing.js">
-</script>
-
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({"HTML-CSS": { 
-    preferredFont: "TeX",
-    availableFonts: ["STIX","TeX"],
-    linebreaks: { automatic:true },
-    EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50) },
-    tex2jax: { inlineMath: [
-        ["$", "$"],
-        ["\\\\(","\\\\)"]
-    ],
-    displayMath: [
-        ["$$","$$"],
-        ["\\[", "\\]"]
-    ],
-    processEscapes: true,
-    ignoreClass: "tex2jax_ignore|dno" },
-    TeX: {  
-        noUndefined: { 
-            attributes: { 
-                mathcolor: "red",
-                mathbackground: "#FFEEEE",
-                mathsize: "90%" }
-            },
-        Macros: {
-            href: "{}"
-        }
-    },
-    messageStyle: "none"
-    });
-
-</script>
-
-=======
->>>>>>> 12ca3da7eaa0a138baef199b34adb416a3d14b8a
         <input type="hidden" name="origin" value=${ origin }>
         <tr>
             <td>
