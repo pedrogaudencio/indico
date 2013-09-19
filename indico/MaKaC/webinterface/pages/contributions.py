@@ -44,7 +44,7 @@ from indico.util.i18n import i18nformat
 from indico.util.date_time import format_time, format_date, format_datetime
 from indico.util import json
 
-from indico.util.string import render_markdown as m
+from indico.util.string import render_markdown
 from MaKaC.common.TemplateExec import render
 
 
@@ -497,7 +497,7 @@ class WContribModifMain(wcomponents.WTemplated):
                     <tr>
                         <td class="dataCaptionTD"><span class="dataCaptionFormat">%s</span></td>
                         <td bgcolor="white" class="blacktext"><table class="tablepre"><tr><td><pre><div style="white-space: nowrap;">%s</div></pre></td></tr></table></td>
-                    </tr>""" % (caption, m(self.htmlText(self._contrib.getField(id))))
+                    </tr>""" % (caption, render_markdown(self.htmlText(self._contrib.getField(id))))
         return html
 
     def _getParticipantsList(self, participantList):
